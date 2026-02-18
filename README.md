@@ -35,12 +35,17 @@ Crear un archivo `.env` en la raíz del proyecto:
 DATABASE_URL="mysql://usuario:contraseña@localhost:3306/note2quiz"
 ```
 
-4. **Ejecutar migraciones de la base de datos**
+4. **Ejecutar prisma**
+```bash
+npx prisma generate
+```
+
+5. **Ejecutar migraciones de la base de datos**
 ```bash
 npx prisma migrate dev
 ```
 
-5. **Poblar la base de datos (opcional)**
+6. **Poblar la base de datos (opcional)**
 ```bash
 npx prisma db seed
 ```
