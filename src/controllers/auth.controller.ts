@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createUser, loginUser } from '../services/user.service';
+import { createUser, loginUser, getUserById } from '../services/user.service';
 import { generateToken } from '../utils/jwt';
 
 export const register = async (
@@ -64,6 +64,42 @@ export const login = async (
         });
     } catch (error) {
         res.status(401).json({
+            ok: false,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+        });
+    }
+};
+
+export const getMe = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                ok: false,
+                error: 'Usuario no autenticado',
+            });
+        }
+
+        const user = await getUserById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                ok: false,
+                error: 'Usuario no encontrado',
+            });
+        }
+
+        res.json({
+            ok: true,
+            data: user,
+            message: 'Información del usuario obtenida exitosamente',
+        });
+    } catch (error) {
+        res.status(500).json({
             ok: false,
             error: error instanceof Error ? error.message : 'Error desconocido',
         });
