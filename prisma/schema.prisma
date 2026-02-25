@@ -7,9 +7,46 @@ datasource db {
   provider = "mysql"
 }
 
-model user {
+model User {
   id        Int      @id @default(autoincrement())
-  email     String   @unique(map: "User_email_key")
-  password  String
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  password  String   @db.VarChar(255)
   createdAt DateTime @default(now())
+
+  quizzes  Quiz[]
+  attempts Attempt[]
+
+  @@map("users")
+}
+
+model Quiz {
+  id         Int      @id @default(autoincrement())
+  title      String   @db.VarChar(255)
+  sourceText String   @db.Text
+  questions  Json
+  createdAt  DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  attempts Attempt[]
+
+  @@map("quizzes")
+}
+
+model Attempt {
+  id        Int      @id @default(autoincrement())
+  score     Int
+  duration  Int
+  answers   Json?
+  createdAt DateTime @default(now())
+
+  userId Int
+  quizId Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("attempts")
 }
