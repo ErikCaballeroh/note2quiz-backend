@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { createUser, loginUser, getUserById } from '../services/user.service';
 import { generateToken } from '../utils/jwt';
 
-export const register = async (
+export const registerController = async (
     req: Request<{}, {}, { email: string; password: string; name: string }>,
     res: Response
 ) => {
@@ -36,7 +36,7 @@ export const register = async (
     }
 };
 
-export const login = async (
+export const loginController = async (
     req: Request<{}, {}, { email: string; password: string }>,
     res: Response
 ) => {
@@ -70,7 +70,7 @@ export const login = async (
     }
 };
 
-export const getMe = async (
+export const getMeController = async (
     req: Request,
     res: Response
 ) => {

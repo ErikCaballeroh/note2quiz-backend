@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getAllUsers, getUserById } from '../services/user.service';
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsersController = async (req: Request, res: Response) => {
     try {
         const users = await getAllUsers();
         res.json({
@@ -16,7 +16,7 @@ export const getUsers = async (req: Request, res: Response) => {
     }
 };
 
-export const getUser = async (
+export const getUserController = async (
     req: Request<{ id: string }>,
     res: Response
 ) => {

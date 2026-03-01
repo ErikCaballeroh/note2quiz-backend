@@ -6,7 +6,11 @@
         "esModuleInterop": true,
         "strict": true,
         "outDir": "dist",
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/types"
+        ]
     },
     "exclude": [
         "*.config.ts"

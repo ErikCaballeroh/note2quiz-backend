@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { getUsers, getUser } from '../controllers/user.controller';
+import { getUsersController, getUserController } from '../controllers/user.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 // Proteger las rutas con el middleware de autenticación
-router.get('/', authMiddleware, getUsers);
-router.get('/:id', authMiddleware, getUser);
+router.get('/', authMiddleware, getUsersController);
+router.get('/:id', authMiddleware, getUserController);
 
 export default router;
