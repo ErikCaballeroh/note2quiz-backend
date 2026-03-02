@@ -56,3 +56,16 @@ export const deleteQuizById = async (id: number, userId: number) => {
         throw new Error(`Error al eliminar quiz: ${error}`);
     }
 };
+
+export const getRecentQuizzes = async (userId: number, limit: number = 10) => {
+    try {
+        const quizzes = await prisma.quiz.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+        });
+        return quizzes;
+    } catch (error) {
+        throw new Error(`Error al obtener quizzes recientes: ${error}`);
+    }
+};

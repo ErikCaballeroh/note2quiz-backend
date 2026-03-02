@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getAllQuizzes, getQuizById, createQuiz, updateQuizById, deleteQuizById } from '../services/quiz.service';
+import { getAllQuizzes, getQuizById, createQuiz, updateQuizById, deleteQuizById, getRecentQuizzes } from '../services/quiz.service';
 
 
 export const getQuizzesController = async (
@@ -16,6 +16,25 @@ export const getQuizzesController = async (
         res.status(500).json({
             ok: false,
             message: 'Error al obtener quizzes',
+        });
+    }
+};
+
+export const getRecentQuizzesController = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        const limit = req.query.limit ? Number(req.query.limit) : 10;
+        const quizzes = await getRecentQuizzes(Number(req.userId), limit);
+        res.json({
+            ok: true,
+            data: quizzes,
+        });
+    } catch (error) {
+        res.status(500).json({
+            ok: false,
+            message: 'Error al obtener quizzes recientes',
         });
     }
 };

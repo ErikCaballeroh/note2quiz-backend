@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createUser, loginUser, getUserById } from '../services/user.service';
+import { createUser, loginUser, getUserWithStats } from '../services/user.service';
 import { generateToken } from '../utils/jwt';
 
 export const registerController = async (
@@ -84,7 +84,7 @@ export const getMeController = async (
             });
         }
 
-        const user = await getUserById(userId);
+        const user = await getUserWithStats(userId);
 
         if (!user) {
             return res.status(404).json({

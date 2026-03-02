@@ -98,3 +98,48 @@ export const loginUser = async (email: string, password: string) => {
         throw new Error(`Error al iniciar sesión: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
 };
+
+export const getUserWithStats = async (id: number) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                createdAt: true,
+                quizzes: true,
+                attempts: true,
+            },
+        });
+
+        if (!user) {
+            return null;
+        }
+
+        // Calcular estadísticas
+        const numQuizzes = user.quizzes.length;
+        const attempts = user.attempts;
+
+        const avgScore = attempts.length > 0
+            ? attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length
+            : 0;
+
+        // Convertir duración total de segundos a horas
+        const totalDurationSeconds = attempts.reduce((sum, attempt) => sum + attempt.duration, 0);
+        const totalHours = totalDurationSeconds / 3600;
+
+        // Retornar datos sin las relaciones crudas
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            createdAt: user.createdAt,
+            numQuizzes,
+            avgScore: parseFloat(avgScore.toFixed(2)),
+            hoursStudied: parseFloat(totalHours.toFixed(2)),
+        };
+    } catch (error) {
+        throw new Error(`Error al obtener estadísticas del usuario: ${error}`);
+    }
+};
