@@ -2,8 +2,25 @@ import prisma from '../prisma/client';
 
 export const getAllQuizzes = async (userId: number) => {
     try {
-        const quizzes = await prisma.quiz.findMany({ where: { userId } });
-        return quizzes;
+        const quizzes = await prisma.quiz.findMany({
+            where: { userId },
+            include: {
+                attempts: {
+                    select: {
+                        score: true
+                    },
+                    orderBy: {
+                        score: 'desc'
+                    },
+                    take: 1
+                }
+            }
+        });
+
+        return quizzes.map(q => ({
+            ...q,
+            highestScore: q.attempts[0]?.score ?? null
+        }));
     } catch (error) {
         throw new Error(`Error al obtener quizzes: ${error}`);
     }
@@ -11,8 +28,27 @@ export const getAllQuizzes = async (userId: number) => {
 
 export const getQuizById = async (id: number, userId: number) => {
     try {
-        const quiz = await prisma.quiz.findFirst({ where: { id, userId } });
-        return quiz;
+        const quiz = await prisma.quiz.findFirst({
+            where: { id, userId },
+            include: {
+                attempts: {
+                    select: {
+                        score: true
+                    },
+                    orderBy: {
+                        score: 'desc'
+                    },
+                    take: 1
+                }
+            }
+        });
+
+        if (!quiz) return null;
+
+        return {
+            ...quiz,
+            highestScore: quiz.attempts[0]?.score ?? null
+        };
     } catch (error) {
         throw new Error(`Error al obtener quiz: ${error}`);
     }
@@ -63,8 +99,23 @@ export const getRecentQuizzes = async (userId: number, limit: number = 10) => {
             where: { userId },
             orderBy: { createdAt: 'desc' },
             take: limit,
+            include: {
+                attempts: {
+                    select: {
+                        score: true
+                    },
+                    orderBy: {
+                        score: 'desc'
+                    },
+                    take: 1
+                }
+            }
         });
-        return quizzes;
+
+        return quizzes.map(q => ({
+            ...q,
+            highestScore: q.attempts[0]?.score ?? null
+        }));
     } catch (error) {
         throw new Error(`Error al obtener quizzes recientes: ${error}`);
     }
