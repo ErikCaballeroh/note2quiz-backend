@@ -11,18 +11,11 @@ export const runOCR = async (base64Image: string): Promise<string> => {
                     {
                         type: "text",
                         text: `
-                        You are an OCR engine.
+                            Extract all text visible in the image.
 
-                        Extract the text EXACTLY as it appears in the image.
+                            If a word is unreadable write [?].
 
-                        Rules:
-                        - Do not summarize
-                        - Do not generate text
-                        - Do not repeat text
-                        - If text is unreadable write [?]
-                        - Preserve original language
-
-                        Return ONLY the extracted text.
+                            Return only the extracted text.
                         `
                     },
                     {
