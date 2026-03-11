@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import { generateQuiz } from "../services/quiz-ai.service"
+import { createQuiz } from "../services/quiz.service"
 
 export const generateQuizController = async (
     req: Request,
@@ -12,22 +13,34 @@ export const generateQuizController = async (
 
         if (!text) {
             return res.status(400).json({
-                error: "text is required"
+                ok: false,
+                message: "text is required"
             })
         }
 
-        const quiz = await generateQuiz(text)
+        const generatedData = await generateQuiz(text)
 
-        res.json(quiz)
+        // Save immediately to DB to retrieve by ID later
+        const savedQuiz = await createQuiz(Number(req.userId), {
+            title: generatedData.title,
+            sourceText: text,
+            questions: generatedData.questions
+        })
+
+        res.json({
+            ok: true,
+            data: savedQuiz
+        })
 
     } catch (error) {
 
         console.error(error)
 
         res.status(500).json({
-            error: "quiz generation failed"
+            ok: false,
+            message: "quiz generation failed"
         })
 
     }
 
-}   
+}

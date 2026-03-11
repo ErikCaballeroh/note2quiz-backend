@@ -30,8 +30,11 @@ export const ocrFromImages = async (req: Request, res: Response) => {
         const finalText = results.join("\n\n");
 
         res.json({
-            pages: results.length,
-            text: finalText
+            ok: true,
+            data: {
+                pages: results.length,
+                text: finalText
+            }
         });
 
     } catch (error) {
@@ -39,7 +42,8 @@ export const ocrFromImages = async (req: Request, res: Response) => {
         console.error(error);
 
         res.status(500).json({
-            error: "OCR failed"
+            ok: false,
+            message: "OCR failed"
         });
 
     }
