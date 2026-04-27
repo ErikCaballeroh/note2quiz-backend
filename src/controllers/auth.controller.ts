@@ -6,6 +6,7 @@ export const registerController = async (
     req: Request<{}, {}, { email: string; password: string; name: string }>,
     res: Response
 ) => {
+    console.log("registerController llamado", req.body); // <- agrega esta línea
     try {
         const { email, password, name } = req.body;
 
@@ -18,7 +19,7 @@ export const registerController = async (
         }
 
         const user = await createUser(email, password, name);
-
+        console.log("usuario creado:", user);
         // Generar token JWT
         const token = generateToken(user.id, user.email);
 
@@ -29,6 +30,7 @@ export const registerController = async (
             message: 'Usuario registrado exitosamente',
         });
     } catch (error) {
+        console.log("error en register:", error);
         res.status(400).json({
             ok: false,
             error: error instanceof Error ? error.message : 'Error desconocido',
