@@ -6,11 +6,11 @@ import { generateQuizController } from '../controllers/quiz-ai.controller';
 const router = Router();
 
 // Proteger las rutas con el middleware de autenticación
-router.get('/recent', authMiddleware, getRecentQuizzesController);
 router.get('/', authMiddleware, getQuizzesController);
-router.post('/', authMiddleware, createQuizController);
-router.post('/generate', authMiddleware, generateQuizController);
 router.get('/:id', authMiddleware, getQuizController);
+router.get('/recent', authMiddleware, getRecentQuizzesController);
+router.post('/generate', authMiddleware, generateQuizController);
+router.post('/', authMiddleware, createQuizController);
 router.put('/:id', authMiddleware, updateQuizController);
 router.delete('/:id', authMiddleware, deleteQuizController);
 

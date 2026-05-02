@@ -1,6 +1,20 @@
 import { Request, Response } from 'express';
 import { getAllQuizzes, getQuizById, createQuiz, updateQuizById, deleteQuizById, getRecentQuizzes } from '../services/quiz.service';
 
+const parseOptionalCategoryId = (value: unknown) => {
+    if (value === undefined || value === null) {
+        return value;
+    }
+
+    const parsedValue = Number(value);
+
+    if (Number.isNaN(parsedValue)) {
+        throw new Error('categoryId inválido');
+    }
+
+    return parsedValue;
+};
+
 
 export const getQuizzesController = async (
     req: Request,
@@ -68,12 +82,14 @@ export const getQuizController = async (
 };
 
 export const createQuizController = async (
-    req: Request<{}, {}, { title: string; sourceText: string; questions: any }>,
+    req: Request<{}, {}, { title: string; sourceText: string; questions: any; categoryId?: number | null }>,
     res: Response
 ) => {
-    const { title, sourceText, questions } = req.body;
+    const { title, sourceText, questions, categoryId } = req.body;
 
     try {
+        const normalizedCategoryId = parseOptionalCategoryId(categoryId);
+
         if (!title || !sourceText || !questions) {
             return res.status(400).json({
                 ok: false,
@@ -85,6 +101,7 @@ export const createQuizController = async (
             title,
             sourceText,
             questions,
+            categoryId: normalizedCategoryId,
         });
 
         res.status(201).json({
@@ -101,13 +118,14 @@ export const createQuizController = async (
 };
 
 export const updateQuizController = async (
-    req: Request<{ id: string }, {}, { title?: string; sourceText?: string; questions?: any }>,
+    req: Request<{ id: string }, {}, { title?: string; sourceText?: string; questions?: any; categoryId?: number | null }>,
     res: Response
 ) => {
     const { id } = req.params;
-    const { title, sourceText, questions } = req.body;
+    const { title, sourceText, questions, categoryId } = req.body;
 
     try {
+        const normalizedCategoryId = parseOptionalCategoryId(categoryId);
         const quiz = await getQuizById(Number(id), Number(req.userId));
 
         if (!quiz) {
@@ -117,10 +135,18 @@ export const updateQuizController = async (
             });
         }
 
+        if (title === undefined && sourceText === undefined && questions === undefined && normalizedCategoryId === undefined) {
+            return res.status(400).json({
+                ok: false,
+                message: 'Debes enviar al menos un campo para actualizar',
+            });
+        }
+
         const result = await updateQuizById(Number(id), Number(req.userId), {
             title,
             sourceText,
             questions,
+            categoryId: normalizedCategoryId,
         });
 
         if (result.count === 0) {

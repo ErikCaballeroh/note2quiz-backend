@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.routes';
 import quizRoutes from './routes/quiz.routes';
 import ocrRoutes from './routes/ocr.routes';
 import attemptRoutes from './routes/attempt.routes';
+import categoryRoutes from './routes/category.routes';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.get('/api/', (_, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/ocr', ocrRoutes);
 app.use('/api/attempts', attemptRoutes);
 

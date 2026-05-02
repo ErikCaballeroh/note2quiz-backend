@@ -2,6 +2,20 @@ import { Request, Response } from "express"
 import { generateQuiz } from "../services/quiz-ai.service"
 import { createQuiz } from "../services/quiz.service"
 
+const parseOptionalCategoryId = (value: unknown) => {
+    if (value === undefined || value === null) {
+        return value;
+    }
+
+    const parsedValue = Number(value);
+
+    if (Number.isNaN(parsedValue)) {
+        throw new Error("categoryId inválido")
+    }
+
+    return parsedValue
+}
+
 export const generateQuizController = async (
     req: Request,
     res: Response
@@ -9,7 +23,8 @@ export const generateQuizController = async (
 
     try {
 
-        const { text } = req.body
+        const { text, categoryId } = req.body
+        const normalizedCategoryId = parseOptionalCategoryId(categoryId)
 
         if (!text) {
             return res.status(400).json({
@@ -24,7 +39,8 @@ export const generateQuizController = async (
         const savedQuiz = await createQuiz(Number(req.userId), {
             title: generatedData.title,
             sourceText: text,
-            questions: generatedData.questions
+            questions: generatedData.questions,
+            categoryId: normalizedCategoryId
         })
 
         res.json({

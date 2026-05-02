@@ -5,7 +5,7 @@ Notes:
 ${text}
 
 Rules:
-- Generate 5 questions (or fewer if there is not enough information)
+- Generate 10 questions (or fewer if there is not enough information)
 - Each question must have 4 options
 - ONLY one option can have "isCorrect": true
 - Do not include explanations

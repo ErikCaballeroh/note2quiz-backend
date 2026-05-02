@@ -22,7 +22,7 @@ const prisma = new PrismaClient({
 async function main() {
     console.log('Seeding database...');
 
-    const passwordHash = await bcrypt.hash('123456', 10);
+    const passwordHash = await bcrypt.hash('test1234', 10);
 
     const user = await prisma.user.upsert({
         where: { email: 'erik@test.com' },
@@ -36,10 +36,34 @@ async function main() {
 
     console.log('User created:', user.email);
 
+    // Create categories
+    const categoriesData = ['Física', 'Matemáticas', 'Programación', 'Redes', 'Bases de Datos'];
+    const categories = [];
+
+    for (const categoryName of categoriesData) {
+        const existingCategory = await prisma.category.findFirst({
+            where: {
+                userId: user.id,
+                name: categoryName,
+            },
+        });
+
+        const category = existingCategory || await prisma.category.create({
+            data: {
+                name: categoryName,
+                userId: user.id,
+            },
+        });
+        categories.push(category);
+    }
+
+    console.log('Categories created');
+
     const quizzesData = [
         {
             title: 'Física - Fuerza',
             sourceText: 'La fuerza es una interacción que cambia el movimiento de un objeto.',
+            categoryId: categories[0].id,
             questions: [
                 {
                     question: '¿Qué es la fuerza?',
@@ -91,6 +115,7 @@ async function main() {
         {
             title: 'Matemáticas - Álgebra',
             sourceText: 'El álgebra usa símbolos para representar números.',
+            categoryId: categories[1].id,
             questions: [
                 {
                     question: '¿Qué representa una variable?',
@@ -142,6 +167,7 @@ async function main() {
         {
             title: 'Programación',
             sourceText: 'La programación permite crear software.',
+            categoryId: categories[2].id,
             questions: [
                 {
                     question: '¿Qué es una variable?',
@@ -192,6 +218,7 @@ async function main() {
         },
         {
             title: 'Redes',
+            categoryId: categories[3].id,
             sourceText: 'Las redes permiten comunicación entre dispositivos.',
             questions: [
                 {
@@ -243,6 +270,7 @@ async function main() {
         },
         {
             title: 'Bases de Datos',
+            categoryId: categories[4].id,
             sourceText: 'Las bases de datos almacenan información estructurada.',
             questions: [
                 {

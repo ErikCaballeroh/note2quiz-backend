@@ -8,15 +8,29 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(100)
-  email     String    @unique @db.VarChar(100)
-  password  String    @db.VarChar(255)
-  createdAt DateTime  @default(now())
-  attempts  Attempt[]
-  quizzes   Quiz[]
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(100)
+  email      String     @unique @db.VarChar(100)
+  password   String     @db.VarChar(255)
+  createdAt  DateTime   @default(now())
+  attempts   Attempt[]
+  quizzes    Quiz[]
+  categories Category[]
 
   @@map("users")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizzes   Quiz[]
+
+  @@unique([userId, name], map: "categories_userId_name_key")
+  @@index([userId], map: "categories_userId_fkey")
+  @@map("categories")
 }
 
 model Quiz {
@@ -26,9 +40,12 @@ model Quiz {
   questions  Json
   createdAt  DateTime  @default(now())
   userId     Int
+  categoryId Int?
   attempts   Attempt[]
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  @@index([categoryId], map: "quizzes_categoryId_fkey")
   @@index([userId], map: "quizzes_userId_fkey")
   @@map("quizzes")
 }
