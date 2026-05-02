@@ -7,8 +7,8 @@ const router = Router();
 
 // Proteger las rutas con el middleware de autenticación
 router.get('/', authMiddleware, getQuizzesController);
-router.get('/:id', authMiddleware, getQuizController);
 router.get('/recent', authMiddleware, getRecentQuizzesController);
+router.get('/:id', authMiddleware, getQuizController);
 router.post('/generate', authMiddleware, generateQuizController);
 router.post('/', authMiddleware, createQuizController);
 router.put('/:id', authMiddleware, updateQuizController);
