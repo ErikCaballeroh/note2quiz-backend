@@ -6,14 +6,7 @@ if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL no existe');
 }
 
-const adapter = new PrismaMariaDb({
-    host: process.env.DATABASE_HOST,
-    port: Number(process.env.DATABASE_PORT),
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
-    connectionLimit: 5
-});
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL);
 
 const prisma = new PrismaClient({
     adapter,
