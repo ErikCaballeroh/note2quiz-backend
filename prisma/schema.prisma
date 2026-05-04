@@ -65,3 +65,17 @@ model Attempt {
   @@index([userId], map: "attempts_userId_fkey")
   @@map("attempts")
 }
+
+model PasswordReset {
+  id         Int       @id @default(autoincrement())
+  email      String    @db.VarChar(100)
+  code       String    @db.VarChar(6)
+  resetToken String?   @unique @db.VarChar(64)
+  createdAt  DateTime  @default(now())
+  verifiedAt DateTime?
+  expiresAt  DateTime
+  used       Boolean   @default(false)
+
+  @@index([email], map: "passwordReset_email_fkey")
+  @@map("password_resets")
+}

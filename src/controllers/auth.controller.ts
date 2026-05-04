@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
-import { createUser, loginUser, getUserWithStats } from '../services/user.service';
+import { createUser, loginUser, getUserWithStats, generatePasswordResetCode, verifyResetCode, resetPassword } from '../services/user.service';
 import { generateToken } from '../utils/jwt';
+import { resend } from '../config/resend';
+import { generatePasswordResetEmail } from '../templates/passwordReset.template';
 
 export const registerController = async (
     req: Request<{}, {}, { email: string; password: string; name: string }>,
@@ -102,6 +104,114 @@ export const getMeController = async (
         });
     } catch (error) {
         res.status(500).json({
+            ok: false,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+        });
+    }
+};
+
+// Controladores para recuperación de contraseña
+export const requestPasswordResetController = async (
+    req: Request<{}, {}, { email: string }>,
+    res: Response
+) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Email es requerido',
+            });
+        }
+
+        // Generar código de reset
+        const { code, expiresAt } = await generatePasswordResetCode(email);
+
+        // Enviar correo con el código
+        const emailResponse = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+            to: email,
+            subject: 'Código para recuperar tu contraseña - Note2Quiz',
+            html: generatePasswordResetEmail(code),
+        });
+
+        if (emailResponse.error) {
+            throw new Error(`Error al enviar correo: ${emailResponse.error.message}`);
+        }
+
+        res.json({
+            ok: true,
+            message: 'Código de reset enviado al correo electrónico',
+            expiresAt,
+        });
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+        });
+    }
+};
+
+export const verifyResetCodeController = async (
+    req: Request<{}, {}, { email: string; code: string }>,
+    res: Response
+) => {
+    try {
+        const { email, code } = req.body;
+
+        if (!email || !code) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Email y código son requeridos',
+            });
+        }
+
+        const verified = await verifyResetCode(email, code);
+
+        res.json({
+            ok: true,
+            message: 'Código verificado exitosamente',
+            data: verified,
+        });
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+        });
+    }
+};
+
+export const resetPasswordController = async (
+    req: Request<{}, {}, { email: string; resetToken: string; newPassword: string }>,
+    res: Response
+) => {
+    try {
+        const { email, resetToken, newPassword } = req.body;
+
+        if (!email || !resetToken || !newPassword) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Email, token y nueva contraseña son requeridos',
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                ok: false,
+                error: 'La contraseña debe tener al menos 6 caracteres',
+            });
+        }
+
+        const user = await resetPassword(email, resetToken, newPassword);
+
+        res.json({
+            ok: true,
+            message: 'Contraseña actualizada exitosamente',
+            data: user,
+        });
+    } catch (error) {
+        res.status(400).json({
             ok: false,
             error: error instanceof Error ? error.message : 'Error desconocido',
         });

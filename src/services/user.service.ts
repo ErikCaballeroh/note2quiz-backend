@@ -1,5 +1,6 @@
 import prisma from '../prisma/client';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 export const getAllUsers = async () => {
     try {
@@ -141,5 +142,146 @@ export const getUserWithStats = async (id: number) => {
         };
     } catch (error) {
         throw new Error(`Error al obtener estadísticas del usuario: ${error}`);
+    }
+};
+
+// Funciones para recuperación de contraseña
+export const generatePasswordResetCode = async (email: string) => {
+    try {
+        // Verificar que el usuario exista
+        const user = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            throw new Error('Usuario no encontrado');
+        }
+
+        // Generar código de 6 dígitos
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Calcular tiempo de expiración (10 minutos)
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Limpiar códigos anteriores no utilizados
+        await prisma.passwordReset.deleteMany({
+            where: {
+                email,
+                used: false,
+            },
+        });
+
+        // Crear nuevo registro de reset
+        await prisma.passwordReset.create({
+            data: {
+                email,
+                code,
+                expiresAt,
+            },
+        });
+
+        return { code, expiresAt };
+    } catch (error) {
+        throw new Error(`Error al generar código de reset: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    }
+};
+
+export const verifyResetCode = async (email: string, code: string) => {
+    try {
+        // Buscar el registro de reset
+        const resetRecord = await prisma.passwordReset.findFirst({
+            where: {
+                email,
+                code,
+                used: false,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        if (!resetRecord) {
+            throw new Error('Código de reset no válido');
+        }
+
+        // Verificar que el código no haya expirado
+        if (new Date() > resetRecord.expiresAt) {
+            throw new Error('El código de reset ha expirado');
+        }
+
+        const resetToken = crypto.randomUUID().replace(/-/g, '');
+
+        const verifiedRecord = await prisma.passwordReset.update({
+            where: { id: resetRecord.id },
+            data: {
+                verifiedAt: new Date(),
+                resetToken,
+            },
+            select: {
+                email: true,
+                resetToken: true,
+                expiresAt: true,
+            },
+        });
+
+        return verifiedRecord;
+    } catch (error) {
+        throw new Error(`Error al validar código: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    }
+};
+
+export const resetPassword = async (email: string, resetToken: string, newPassword: string) => {
+    try {
+        // Validar el token generado tras verificar el código
+        const resetRecord = await prisma.passwordReset.findFirst({
+            where: {
+                email,
+                resetToken,
+                used: false,
+                verifiedAt: {
+                    not: null,
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        if (!resetRecord) {
+            throw new Error('El proceso de verificación no es válido');
+        }
+
+        if (new Date() > resetRecord.expiresAt) {
+            throw new Error('El código de reset ha expirado');
+        }
+
+        // Hashear la nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Actualizar la contraseña del usuario
+        const user = await prisma.user.update({
+            where: { email },
+            data: {
+                password: hashedPassword,
+            },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+            },
+        });
+
+        // Marcar el código como utilizado
+        await prisma.passwordReset.update({
+            where: { id: resetRecord.id },
+            data: {
+                used: true,
+                resetToken: null,
+            },
+        });
+
+        return user;
+    } catch (error) {
+        throw new Error(`Error al resetear contraseña: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
 };
